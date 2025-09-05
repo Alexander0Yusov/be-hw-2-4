@@ -1,0 +1,181 @@
+openapi: 3.0.0
+info:
+  title: API Documentation
+  version: 1.0.0
+
+securitySchemes:
+  BasicAuth:
+    type: http
+    scheme: basic
+
+tags:
+  - name: Blogs
+    description: API for managing blogs
+
+paths:
+  /api/blogs:
+    get:
+      summary: Get a list of all blogs
+      tags: [Blogs]
+      responses:
+        200:
+          description: List of all blogs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Blog'
+    post:
+      summary: Add a new blog
+      tags: [Blogs]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlogInputDto'
+      responses:
+        201:
+          description: The blog was successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Blog'
+        400:
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+
+  /api/blogs/{id}:
+    get:
+      summary: Get a blog by ID
+      tags: [Blogs]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: 'The unique identifier of the blog'
+          schema:
+            type: string
+            example: '123abc'
+      responses:
+        200:
+          description: The requested blog
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Blog'
+        404:
+          description: Blog not found
+    put:
+      summary: Update a blog by ID
+      tags: [Blogs]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: 'The unique identifier of the blog'
+          schema:
+            type: string
+            example: '123abc'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlogInputDto'
+      responses:
+        204:
+          description: Blog updated successfully
+        400:
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        404:
+          description: Blog not found
+    delete:
+      summary: Delete a blog by ID
+      tags: [Blogs]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: 'The unique identifier of the blog'
+          schema:
+            type: string
+            example: '123abc'
+      responses:
+        204:
+          description: Blog deleted successfully
+        404:
+          description: Blog not found
+components:
+  schemas:
+    Blog:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - websiteUrl
+      properties:
+        id:
+          type: string
+          description: 'The unique identifier for the blog'
+          example: 'abc123'
+        name:
+          type: string
+          description: 'The full name of the blog'
+          example: 'Interest blog'
+        description:
+          type: string
+          description: 'Little story about the blog'
+          example: 'Blog about nature'
+        websiteUrl:
+          type: string
+          description: 'The website URL address'
+          example: 'https://google.com'
+    BlogInputDto:
+      type: object
+      required:
+        - name
+        - description
+        - websiteUrl
+      properties:
+        id:
+          type: string
+          description: 'The unique identifier for the blog'
+          example: 'abc123'
+        name:
+          type: string
+          description: 'The full name of the blog'
+          example: 'Interest blog'
+        description:
+          type: string
+          description: 'Little story about the blog'
+          example: 'Blog about nature'
+        websiteUrl:
+          type: string
+          description: 'The website URL address'
+          example: 'https://google.com'
+    ValidationError:
+      type: object
+      properties:
+        field:
+          type: string
+          example: 'name'
+        message:
+          type: string
+          example: 'Invalid name'
+    ValidationErrorResponse:
+      type: object
+      properties:
+        errorMessages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'

@@ -1,0 +1,17 @@
+openapi: 3.0.0
+info:
+  title: API Documentation
+  version: 1.0.0
+
+tags:
+  - name: Testing
+    description: API for clearing the database
+
+paths:
+  /api/testing/all-data:
+    delete:
+      summary: 'Clear database: delete all data from all tables/collections'
+      tags: [Testing]
+      responses:
+        204:
+          description: All data deleted
