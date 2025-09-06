@@ -65,6 +65,7 @@ export const testSeeder = {
         passwordHash: pass,
         createdAt: new Date(),
       },
+      refreshTokens: [],
       loginAttempts: [],
       emailConfirmation: {
         sentEmails: [],

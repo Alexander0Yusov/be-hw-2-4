@@ -1,3 +1,5 @@
+import { RefreshTokenData } from '../../5-auth/types/refresh-token';
+
 export type User = {
   accountData: {
     login: string;
@@ -5,11 +7,12 @@ export type User = {
     passwordHash: string;
     createdAt: Date;
   };
-  loginAttempts: [];
   emailConfirmation: {
     sentEmails: [];
     confirmationCode: string;
     expirationDate: Date;
     isConfirmed: boolean;
   };
+  refreshTokens: RefreshTokenData[];
+  loginAttempts: [];
 };

@@ -7,7 +7,7 @@
       "src": "src/index.ts",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["src/**/*.yml"]
+        "includeFiles": ["./node_modules/**", "src/**/*.yml"]
       }
     }
   ],

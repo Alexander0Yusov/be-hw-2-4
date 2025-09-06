@@ -18,6 +18,7 @@ export const usersService = {
         passwordHash,
         createdAt: new Date(),
       },
+      refreshTokens: [],
       loginAttempts: [],
       emailConfirmation: {
         sentEmails: [],

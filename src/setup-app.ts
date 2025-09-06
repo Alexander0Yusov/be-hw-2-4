@@ -8,10 +8,12 @@ import { usersRouter } from './4-users/router/users.router';
 import { setupSwagger } from './core/swagger/setup-swagger';
 import { authRouter } from './5-auth/router/auth.router';
 import { commentsRouter } from './6-comments/router/comments.router';
+import cookieParser from 'cookie-parser';
 
 export const setupApp = (app: Express) => {
   app.use(express.json());
   app.use(cors());
+  app.use(cookieParser());
 
   app.get('/', (req, res) => {
     res.status(200).send('Hello world!');

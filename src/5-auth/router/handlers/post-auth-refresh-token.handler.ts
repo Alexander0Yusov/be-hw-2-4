@@ -1,20 +1,21 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { IdType } from '../../../core/types/id';
+import { RequestWithUserId } from '../../../core/types/requests';
 import { HttpStatus } from '../../../core/types/HttpStatus';
-import { AuthInputModel } from '../../types/auth-iput-model';
 import { authService } from '../../domain/auth.service';
 import { ResultStatus } from '../../../core/result/resultCode';
 import { resultCodeToHttpException } from '../../../core/result/resultCodeToHttpException';
 
-export async function postAuthHandler(req: Request<{}, {}, AuthInputModel>, res: Response) {
-  const { loginOrEmail, password } = req.body;
+export async function postAuthRefreshTokenHandler(req: RequestWithUserId<IdType>, res: Response) {
+  const incomeRefreshToken = req.cookies.refreshToken;
 
-  const result = await authService.loginUser(loginOrEmail, password);
+  const result = await authService.updateTokensPair(incomeRefreshToken);
 
   if (result.status !== ResultStatus.Success) {
     return res.status(resultCodeToHttpException(result.status)).send(result.extensions);
   }
 
-  res.cookie('refreshToken', result.data!.refreshToken, { httpOnly: true, secure: true });
+  res.cookie('refreshToken', result!.data!.refreshToken, { httpOnly: true, secure: true });
 
   return res.status(HttpStatus.Ok).send({ accessToken: result.data!.accessToken });
 }

@@ -3,7 +3,7 @@ import { jwtService } from '../adapters/jwt.service';
 import { ResultStatus } from '../../core/result/resultCode';
 import { Result } from '../../core/result/result.type';
 import { bcryptService } from '../adapters/bcrypt.service';
-import { add } from 'date-fns';
+import { add, addSeconds } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 
 import { usersRepository } from '../../4-users/repository/users.repository';
@@ -11,10 +11,12 @@ import { User } from '../../4-users/types/user';
 import { usersService } from '../../4-users/application/users.service';
 import { nodemailerService } from '../adapters/nodemailer.service';
 import { emailExamples } from '../adapters/email-examples';
-import { db } from '../../db/mongo.db';
 
 export const authService = {
-  async loginUser(loginOrEmail: string, password: string): Promise<Result<{ accessToken: string } | null>> {
+  async loginUser(
+    loginOrEmail: string,
+    password: string,
+  ): Promise<Result<{ accessToken: string; refreshToken: string } | null>> {
     const result = await this.checkUserCredentials(loginOrEmail, password);
 
     if (result.status !== ResultStatus.Success)
@@ -25,11 +27,21 @@ export const authService = {
         data: null,
       };
 
-    const accessToken = await jwtService.createToken(result.data!._id.toString());
+    const accessToken = await jwtService.createAccessToken(result.data!._id.toString());
+    const refreshToken = await jwtService.createRefreshToken(result.data!._id.toString());
+
+    const refreshTokenData = {
+      value: refreshToken,
+      createdAt: new Date(),
+      expiresAt: addSeconds(new Date(), 20),
+      isRevoked: false,
+    };
+
+    await usersRepository.setRefreshTokenById(result.data!._id, refreshTokenData);
 
     return {
       status: ResultStatus.Success,
-      data: { accessToken },
+      data: { accessToken, refreshToken },
       extensions: [],
     };
   },
@@ -64,7 +76,6 @@ export const authService = {
 
   async registerUser(login: string, email: string, password: string): Promise<Result<WithId<User> | null>> {
     const existsLogin = await usersRepository.findByEmailOrLogin(login);
-    const existsEmail = await usersRepository.findByEmailOrLogin(email);
 
     if (existsLogin) {
       return {
@@ -74,6 +85,8 @@ export const authService = {
         extensions: [{ field: 'login', message: 'Login already exists' }],
       };
     }
+
+    const existsEmail = await usersRepository.findByEmailOrLogin(email);
 
     if (existsEmail) {
       return {
@@ -111,9 +124,6 @@ export const authService = {
 
   async confirmEmail(code: string): Promise<Result<true | null>> {
     const user = await usersRepository.findByCode(code);
-
-    // console.log(4444, code);
-    // console.log(5555, await db.getCollections().userCollection.find().toArray());
 
     if (!user) {
       return {
@@ -170,6 +180,76 @@ export const authService = {
 
     // отправляем письмо на почту
     await nodemailerService.sendEmail(email, newCode, emailExamples.registrationEmail);
+
+    return {
+      status: ResultStatus.NoContent,
+      data: true,
+      extensions: [],
+    };
+  },
+
+  async updateTokensPair(refreshToken: string): Promise<Result<Record<string, string> | null>> {
+    const user = await usersRepository.findByRefreshToken(refreshToken);
+
+    // нет токена в базе
+    if (!user) {
+      return {
+        status: ResultStatus.BadRequest,
+        errorMessage: 'BadRequest',
+        extensions: [{ field: 'refreshToken', message: 'Refresh token not found' }],
+        data: null,
+      };
+    }
+
+    // если протух
+    if (await jwtService.isTokenExpired(refreshToken)) {
+      return {
+        status: ResultStatus.BadRequest,
+        errorMessage: 'BadRequest',
+        extensions: [{ field: 'refreshToken', message: 'Refresh token already been expired' }],
+        data: null,
+      };
+    }
+
+    // меняем статус рефреш токена на негодный
+    await usersRepository.setStatusIsRevokedForRefreshToken(refreshToken);
+
+    // генерим новый и укладываем в базу
+    const newRefreshToken = await jwtService.createRefreshToken(user._id.toString());
+    const newAccessToken = await jwtService.createAccessToken(user._id.toString());
+
+    return {
+      status: ResultStatus.NoContent,
+      data: { refreshToken: newRefreshToken, accessToken: newAccessToken },
+      extensions: [],
+    };
+  },
+
+  async logoutUser(refreshToken: string): Promise<Result<true | null>> {
+    const user = await usersRepository.findByRefreshToken(refreshToken);
+
+    // нет токена в базе
+    if (!user) {
+      return {
+        status: ResultStatus.BadRequest,
+        errorMessage: 'BadRequest',
+        extensions: [{ field: 'refreshToken', message: 'Refresh token not found' }],
+        data: null,
+      };
+    }
+
+    // если протух
+    if (await jwtService.isTokenExpired(refreshToken)) {
+      return {
+        status: ResultStatus.BadRequest,
+        errorMessage: 'BadRequest',
+        extensions: [{ field: 'refreshToken', message: 'Refresh token already been expired' }],
+        data: null,
+      };
+    }
+
+    // меняем статус рефреш токена на негодный
+    await usersRepository.setStatusIsRevokedForRefreshToken(refreshToken);
 
     return {
       status: ResultStatus.NoContent,

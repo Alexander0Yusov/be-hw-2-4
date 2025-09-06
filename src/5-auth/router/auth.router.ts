@@ -4,7 +4,10 @@ import { accessTokenGuard } from './guards/access.token.guard';
 import {
   getAuthMeHandler,
   postAuthHandler,
+  postAuthLogoutHandler,
+  postAuthRefreshTokenHandler,
   postAuthRegistrationConfirmationHandler,
+  postAuthRegistrationEmailResendingHandler,
   postAuthRegistrationHandler,
 } from './handlers';
 import { loginOrEmailDtoValidationMiddleware } from '../validation/login-or-email-dto-validation.middleware';
@@ -12,7 +15,6 @@ import { passwordDtoValidationMiddleware } from '../validation/password-dto-vali
 import { userDtoValidationMiddleware } from '../../4-users/validation/user-dto-validation.middleware';
 import { confirmationCodeDtoValidationMiddleware } from '../validation/confirmation-code-dto-validation.middleware';
 import { emailDtoValidationMiddleware } from '../validation/email-dto-validation.middleware';
-import { postAuthRegistrationEmailResendingHandler } from './handlers/post-auth-registration-email-resending.handler';
 
 export const authRouter = Router({});
 
@@ -26,7 +28,6 @@ authRouter.post(
 
 authRouter.get('/me', accessTokenGuard, getAuthMeHandler);
 
-//
 authRouter.post('/registration', userDtoValidationMiddleware, errorsCatchMiddleware, postAuthRegistrationHandler);
 
 authRouter.post(
@@ -36,10 +37,13 @@ authRouter.post(
   postAuthRegistrationConfirmationHandler,
 );
 
-// должен существовать имейл, чтобы снова создать код и снова его отправить на почту
 authRouter.post(
   '/registration-email-resending',
   emailDtoValidationMiddleware,
   errorsCatchMiddleware,
   postAuthRegistrationEmailResendingHandler,
 );
+
+authRouter.post('/refresh-token', postAuthRefreshTokenHandler);
+
+authRouter.post('/logout', postAuthLogoutHandler);
