@@ -30,13 +30,14 @@ describe('AUTH-INTEGRATION', () => {
       .mockImplementation((email: string, code: string, template: (code: string) => string) => Promise.resolve(true));
 
     const registerUserUseCase = authService.registerUser;
+    const loginUserUseCase = authService.loginUser;
 
     it('should register user with correct data', async () => {
       const { login, pass, email } = testSeeder.createUserDto();
 
       const result = await registerUserUseCase(login, pass, email);
 
-      expect(result.status).toBe(ResultStatus.Success);
+      expect(result.status).toBe(ResultStatus.NoContent);
 
       expect(nodemailerService.sendEmail).toHaveBeenCalled();
       expect(nodemailerService.sendEmail).toHaveBeenCalledTimes(1);

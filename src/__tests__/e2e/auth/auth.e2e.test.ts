@@ -86,4 +86,43 @@ describe('Auth API', () => {
       .send({ email: 'yusovsky2@gmail.com' })
       .expect(HttpStatus.BadRequest);
   });
+
+  it('should refresh token pair; POST /auth/refresh-token', async () => {
+    const newUser = createFakeUser('f');
+
+    await request(app)
+      .post(USERS_PATH)
+      .set('Authorization', generateBasicAuthToken())
+      .send(newUser)
+      .expect(HttpStatus.Created);
+
+    const res = await request(app)
+      .post(AUTH_PATH + '/login')
+      .send({ loginOrEmail: newUser.email, password: newUser.password })
+      .expect(HttpStatus.Ok);
+
+    if (Array.isArray(res.headers['set-cookie'])) {
+      const refreshToken = res.headers['set-cookie']
+        .find((c) => c.startsWith('refreshToken='))
+        ?.split(';')[0]
+        .split('=')[1];
+
+      console.log(55, refreshToken, 555, res.body.accessToken);
+
+      const res2 = await request(app)
+        .post(AUTH_PATH + '/refresh-token')
+        .set('Cookie', [`refreshToken=${refreshToken}`])
+        .send({ accessToken: res.body.accessToken })
+        .expect(HttpStatus.Ok);
+
+      if (Array.isArray(res2.headers['set-cookie'])) {
+        const refreshToken2 = res2.headers['set-cookie']
+          .find((c) => c.startsWith('refreshToken='))
+          ?.split(';')[0]
+          .split('=')[1];
+
+        console.log(66, refreshToken2, 666, res2.body.accessToken);
+      }
+    }
+  });
 });

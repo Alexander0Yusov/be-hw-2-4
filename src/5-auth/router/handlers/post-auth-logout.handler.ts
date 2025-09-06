@@ -1,7 +1,6 @@
 import { Response } from 'express';
 import { IdType } from '../../../core/types/id';
 import { RequestWithUserId } from '../../../core/types/requests';
-import { HttpStatus } from '../../../core/types/HttpStatus';
 import { authService } from '../../domain/auth.service';
 import { ResultStatus } from '../../../core/result/resultCode';
 import { resultCodeToHttpException } from '../../../core/result/resultCodeToHttpException';
@@ -17,5 +16,5 @@ export async function postAuthLogoutHandler(req: RequestWithUserId<IdType>, res:
 
   res.cookie('refreshToken', '', { httpOnly: true, secure: true, expires: new Date(0) });
 
-  return res.sendStatus(HttpStatus.NoContent);
+  res.sendStatus(resultCodeToHttpException(result.status));
 }

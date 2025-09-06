@@ -1,7 +1,6 @@
 import { Response } from 'express';
 import { IdType } from '../../../core/types/id';
 import { RequestWithUserId } from '../../../core/types/requests';
-import { HttpStatus } from '../../../core/types/HttpStatus';
 import { authService } from '../../domain/auth.service';
 import { ResultStatus } from '../../../core/result/resultCode';
 import { resultCodeToHttpException } from '../../../core/result/resultCodeToHttpException';
@@ -17,5 +16,5 @@ export async function postAuthRefreshTokenHandler(req: RequestWithUserId<IdType>
 
   res.cookie('refreshToken', result!.data!.refreshToken, { httpOnly: true, secure: true });
 
-  return res.status(HttpStatus.Ok).send({ accessToken: result.data!.accessToken });
+  res.status(resultCodeToHttpException(result.status)).send({ accessToken: result.data!.accessToken });
 }
