@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "name": "be-hw-2-4",
   "buildCommand": "pnpm run build",
   "builds": [
@@ -7,7 +8,7 @@
       "src": "src/index.ts",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["./node_modules/**", "src/**/*.yml"]
+        "includeFiles": ["src/**/*.yml"]
       }
     }
   ],
